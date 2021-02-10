@@ -1,3 +1,11 @@
+/******************************************************************************
+* File Name:        timer.cpp
+* Description:      
+* Notes:            
+* Author:           Aseem Tiwari
+* Date:             10/02/2021
+******************************************************************************/
+
 #include <iostream>
 #include <functional>
 #include <thread>
@@ -43,28 +51,6 @@ Timer::~Timer()
     this->Dispose();
 }
 
-// void Timer::TimerThreadFunc()
-// {
-//     do
-//     {
-//         if (!m_Active.load())
-//         {
-//             return;
-//         }
-
-//         std::this_thread::sleep_for(std::chrono::milliseconds(m_TimeInterval));
-
-//         if (!m_Active.load())
-//         {
-//             return;
-//         }
-
-//         // std::cout << "Thread Id - " << std::this_thread::get_id() << "\n";
-        
-//         m_Callback();
-//     }while(m_AutoReset);
-// }
-
 void Timer::TimerThreadFunc()
 {
     do
@@ -85,16 +71,6 @@ void Timer::TimerThreadFunc()
             return;
         }
 
-        // std::unique_lock<std::mutex> lock(m_MutexForCV);
-        // if(m_CondVar.wait_for(lock, std::chrono::milliseconds(m_TimeInterval),[this]
-        // {
-        //     return (m_Active == false);
-        // }))
-        // {
-        //     return;
-        // }
-        
-        // m_Callback();
     }while(m_AutoReset);
 }
 
@@ -108,7 +84,9 @@ void Timer::Start()
 
     if (!m_TimerThread.joinable())
     {
-        m_Active = true;
+        {
+            m_Active = true;
+        }
         m_TimerThread = std::thread(&Timer::TimerThreadFunc, this);
         m_TimerThread.detach();
     }
@@ -128,8 +106,11 @@ void Timer::Restart(uint64_t timeMs)
 void Timer::Stop()
 {
     std::cout << "Stopping Timer" << "\n";
-    std::lock_guard<std::mutex> lg(m_MutexForCV);
-    m_Active = false;
+    {
+        std::lock_guard<std::mutex> lg(m_MutexForCV);
+        m_Active = false;
+    }
+    
     m_CondVar.notify_one();
 }
 
